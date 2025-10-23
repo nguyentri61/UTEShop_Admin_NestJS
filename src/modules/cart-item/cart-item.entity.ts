@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   Unique,
   Index,
+  JoinColumn,
 } from "typeorm";
 
 @Entity("cart_item")
@@ -18,17 +19,23 @@ export class CartItem {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Column({ name: "userId" })
+  userId: string;
+
+  @Column({ name: "variantId" })
+  variantId: string;
+
   @Column({ type: "int", default: 1 })
   quantity: number;
 
   @CreateDateColumn({ type: "datetime" })
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.cart, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (user) => user.cart)
+  @JoinColumn({ name: "userId" })
   user: User;
 
-  @ManyToOne(() => ProductVariant, (variant) => variant.cartItems, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(() => ProductVariant, (v) => v.cartItems)
+  @JoinColumn({ name: "variantId" })
   variant: ProductVariant;
 }

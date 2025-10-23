@@ -12,6 +12,7 @@ import {
   OneToMany,
   CreateDateColumn,
   Index,
+  JoinColumn,
 } from "typeorm";
 
 @Entity("product")
@@ -41,9 +42,11 @@ export class Product {
   @CreateDateColumn({ type: "datetime" })
   createdAt: Date;
 
-  @ManyToOne(() => Category, (category) => category.product, {
-    onDelete: "CASCADE",
-  })
+  @Column({ name: "categoryId" })
+  categoryId: string;
+
+  @ManyToOne(() => Category, (category) => category.product)
+  @JoinColumn({ name: "categoryId" })
   category: Category;
 
   @OneToMany(() => ProductImage, (img) => img.product)

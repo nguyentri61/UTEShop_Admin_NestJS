@@ -8,6 +8,7 @@ import {
   ManyToOne,
   OneToMany,
   Index,
+  JoinColumn,
 } from "typeorm";
 
 @Entity("product_variant")
@@ -16,29 +17,16 @@ export class ProductVariant {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ nullable: true })
-  color?: string;
+  @Column({ name: "productId" })
+  productId: string;
 
-  @Column({ nullable: true })
-  size?: string;
-
-  @Column({ type: "int" })
-  stock: number;
-
-  @Column({ type: "float" })
-  price: number;
-
-  @Column({ type: "float", nullable: true })
-  discountPrice?: number;
-
-  @ManyToOne(() => Product, (product) => product.variants, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(() => Product, (p) => p.variants)
+  @JoinColumn({ name: "productId" })
   product: Product;
 
-  @OneToMany(() => CartItem, (cartItem) => cartItem.variant)
-  cartItems: CartItem[];
-
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.variant)
+  @OneToMany(() => OrderItem, (oi) => oi.variant)
   orderItems: OrderItem[];
+
+  @OneToMany(() => CartItem, (c) => c.variant)
+  cartItems: CartItem[];
 }

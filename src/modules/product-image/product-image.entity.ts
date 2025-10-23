@@ -5,6 +5,7 @@ import {
   Column,
   ManyToOne,
   Index,
+  JoinColumn,
 } from "typeorm";
 
 @Entity("product_image")
@@ -16,8 +17,10 @@ export class ProductImage {
   @Column()
   url: string;
 
-  @ManyToOne(() => Product, (product) => product.productImage, {
-    onDelete: "CASCADE",
-  })
+  @Column({ name: "productId" })
+  productId: string;
+
+  @ManyToOne(() => Product, (p) => p.productImage)
+  @JoinColumn({ name: "productId" })
   product: Product;
 }

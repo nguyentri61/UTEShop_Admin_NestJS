@@ -4,8 +4,9 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   ManyToOne,
-  CreateDateColumn,
   Index,
+  Column,
+  JoinColumn,
 } from "typeorm";
 
 @Entity("recently_viewed")
@@ -16,14 +17,24 @@ export class RecentlyViewed {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @CreateDateColumn({ type: "datetime" })
+  @Column({ name: "userId" })
+  userId: string;
+
+  @Column({ name: "productId" })
+  productId: string;
+
+  @Column({
+    type: "datetime",
+    name: "viewedAt",
+    default: () => "CURRENT_TIMESTAMP",
+  })
   viewedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.recentlyViewed, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.recentlyViewed, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "userId" })
   user: User;
 
-  @ManyToOne(() => Product, (product) => product.recentlyViewed, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(() => Product, (p) => p.recentlyViewed, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "productId" })
   product: Product;
 }

@@ -55,6 +55,9 @@ export class User {
   @Column({ type: "enum", enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
+  @Column({ default: false })
+  blocked: boolean;
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 

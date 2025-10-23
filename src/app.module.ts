@@ -24,7 +24,7 @@ import { RecentlyViewedModule } from "./modules/recently-viewed/recently-viewed.
       username: "root",
       password: "root",
       database: "ute_shop_db",
-      entities: [],
+      entities: [__dirname + "/**/*.entity{.ts,.js}"],
       synchronize: false,
     }),
     UserModule,

@@ -6,14 +6,22 @@ import {
   Column,
   ManyToOne,
   Index,
+  JoinColumn,
 } from "typeorm";
 
-@Entity("order_item")
+@Entity("orderItem")
 @Index(["order"])
 @Index(["variant"])
 export class OrderItem {
   @PrimaryGeneratedColumn("uuid")
   id: string;
+
+  // DB columns from Prisma: order_id and variantId
+  @Column({ name: "order_id" })
+  orderId: string;
+
+  @Column({ name: "variantId" })
+  variantId: string;
 
   @Column({ type: "int" })
   quantity: number;
@@ -21,11 +29,11 @@ export class OrderItem {
   @Column({ type: "float", default: 0 })
   price: number;
 
-  @ManyToOne(() => Order, (order) => order.items, { onDelete: "CASCADE" })
+  @ManyToOne(() => Order, (o) => o.items, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "order_id" }) // map FK column
   order: Order;
 
-  @ManyToOne(() => ProductVariant, (variant) => variant.orderItems, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(() => ProductVariant, (v) => v.orderItems)
+  @JoinColumn({ name: "variantId" }) // map FK column (or change to 'variant_id' if DB uses snake_case)
   variant: ProductVariant;
 }

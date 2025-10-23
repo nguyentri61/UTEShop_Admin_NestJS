@@ -8,6 +8,7 @@ import {
   ManyToOne,
   OneToMany,
   CreateDateColumn,
+  JoinColumn,
 } from "typeorm";
 
 export enum OrderStatus {
@@ -44,7 +45,12 @@ export class Order {
   })
   status: OrderStatus;
 
+  // explicit FK column matching Prisma (userId)
+  @Column({ name: "userId" })
+  userId: string;
+
   @ManyToOne(() => User, (user) => user.orders, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "userId" })
   user: User;
 
   @OneToMany(() => OrderItem, (item) => item.order)

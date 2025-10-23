@@ -6,6 +6,7 @@ import {
   Column,
   ManyToOne,
   Index,
+  JoinColumn,
 } from "typeorm";
 
 export enum CouponType {
@@ -38,15 +39,23 @@ export class Coupon {
   @Column({ type: "datetime" })
   expiredAt: Date;
 
+  @Column({ name: "orderId", nullable: true })
+  orderId?: string;
+
+  @Column({ name: "userId", nullable: true })
+  userId?: string;
+
   @ManyToOne(() => Order, (order) => order.coupons, {
     nullable: true,
     onDelete: "SET NULL",
   })
-  order?: Order;
+  @JoinColumn({ name: "orderId" })
+  order: Order;
 
   @ManyToOne(() => User, (user) => user.coupons, {
     nullable: true,
     onDelete: "SET NULL",
   })
-  user?: User;
+  @JoinColumn({ name: "userId" })
+  user: User;
 }
