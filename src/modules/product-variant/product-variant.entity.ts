@@ -11,7 +11,7 @@ import {
   JoinColumn,
 } from "typeorm";
 
-@Entity("product_variant")
+@Entity("productVariant")
 @Index(["product"])
 export class ProductVariant {
   @PrimaryGeneratedColumn("uuid")

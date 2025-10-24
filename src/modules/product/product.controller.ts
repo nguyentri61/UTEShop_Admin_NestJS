@@ -2,53 +2,94 @@ import {
   Controller,
   Get,
   Post,
-  Put,
-  Delete,
-  Param,
   Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseUUIDPipe,
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
 import { ProductService } from "./product.service";
-import { CreateProductDto } from "./dto/create-product.dto";
-import { UpdateProductDto } from "./dto/update-product.dto";
-import { ApiResponse } from "src/common/response/api-response";
-import { Product } from "./product.entity";
+import {
+  CreateProductDto,
+  QueryProductDto,
+  UpdateProductDto,
+} from "src/modules/product/dto/product-dto";
 
 @Controller("products")
 export class ProductController {
-  constructor(private readonly service: ProductService) {}
+  constructor(private readonly productService: ProductService) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() createProductDto: CreateProductDto) {
+    return this.productService.create(createProductDto);
+  }
 
   @Get()
-  async getAll(): Promise<ApiResponse<Product[]>> {
-    const items = await this.service.findAll();
-    return ApiResponse.success(items);
+  findAll(@Query() query: QueryProductDto) {
+    return this.productService.findAll(query);
+  }
+
+  @Get("top-viewed")
+  getTopViewed(@Query("limit") limit?: number) {
+    return this.productService.getTopViewed(limit);
+  }
+
+  @Get("newest")
+  getNewest(@Query("limit") limit?: number) {
+    return this.productService.getNewestProducts(limit);
+  }
+
+  @Get("discounted")
+  getDiscounted() {
+    return this.productService.getDiscountedProducts();
+  }
+
+  @Get("category/:categoryId")
+  findByCategory(
+    @Param("categoryId", ParseUUIDPipe) categoryId: string,
+    @Query() query: QueryProductDto,
+  ) {
+    return this.productService.findByCategory(categoryId, query);
   }
 
   @Get(":id")
-  async getOne(@Param("id") id: string): Promise<ApiResponse<Product>> {
-    const item = await this.service.findOne(id);
-    return ApiResponse.success(item);
+  async findOne(@Param("id", ParseUUIDPipe) id: string) {
+    // Increment view count
+    await this.productService.incrementViewCount(id);
+    return this.productService.findOne(id);
   }
 
-  @Post()
-  async create(@Body() dto: CreateProductDto): Promise<ApiResponse<Product>> {
-    const created = await this.service.create(dto);
-    return ApiResponse.success(created);
-  }
-
-  @Put(":id")
-  async update(
-    @Param("id") id: string,
-    @Body() dto: UpdateProductDto,
-  ): Promise<ApiResponse<Product>> {
-    const updated = await this.service.update(id, dto);
-    return ApiResponse.success(updated);
+  @Patch(":id")
+  update(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    return this.productService.update(id, updateProductDto);
   }
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param("id") id: string) {
-    await this.service.remove(id);
+  remove(@Param("id", ParseUUIDPipe) id: string) {
+    return this.productService.remove(id);
+  }
+
+  @Patch(":id/stock")
+  updateStock(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body("quantity") quantity: number,
+  ) {
+    return this.productService.updateStock(id, quantity);
+  }
+
+  @Get(":id/check-stock")
+  checkStock(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Query("quantity") quantity: number,
+  ) {
+    return this.productService.checkStock(id, quantity);
   }
 }

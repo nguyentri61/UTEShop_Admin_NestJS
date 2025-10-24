@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from "typeorm";
 
-@Entity("product_image")
+@Entity("productImage")
 @Index(["product"])
 export class ProductImage {
   @PrimaryGeneratedColumn("uuid")
