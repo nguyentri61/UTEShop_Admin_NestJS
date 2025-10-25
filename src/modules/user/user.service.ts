@@ -42,6 +42,7 @@ export class UserService {
       fullName: user.fullName,
       gender: user.gender,
       phone: user.phone,
+      address: user.address,
       role: user.role,
       blocked: user.blocked,
     });

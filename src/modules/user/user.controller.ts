@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Put,
-  Patch,
   Param,
   Body,
   HttpCode,
@@ -33,7 +32,7 @@ export class UserController {
     return ApiResponse.success(user);
   }
 
-  @Patch(":id/block")
+  @Put(":id/block")
   @HttpCode(HttpStatus.OK)
   async block(
     @Param("id") id: string,

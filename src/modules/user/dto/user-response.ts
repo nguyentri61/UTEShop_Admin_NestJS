@@ -6,6 +6,7 @@ export class UserResponse {
   fullName?: string;
   gender?: string;
   phone?: string;
+  address?: string;
   role: UserRole;
   blocked: boolean;
 
