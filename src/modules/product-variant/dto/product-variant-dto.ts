@@ -1,31 +1,18 @@
 export class CreateProductVariantDto {
   productId: string;
-
-  size: string;
-
-  color: string;
-
+  color?: string;
+  size?: string;
   price: number;
-
   stock: number;
-
-  sku?: string;
-
-  imageUrl?: string;
+  discountPrice?: number;
 }
 
 export class UpdateProductVariantDto {
-  size?: string;
-
   color?: string;
-
+  size?: string;
   price?: number;
-
   stock?: number;
-
-  sku?: string;
-
-  imageUrl?: string;
+  discountPrice?: number;
 }
 
 export class ProductBasicInfoDto {
@@ -40,15 +27,18 @@ export class ProductBasicInfoDto {
 
 export class ProductVariantDetailResponseDto {
   id: string;
-  size: string;
-  color: string;
+  productId: string;
+  color?: string;
+  size?: string;
   price: number;
   stock: number;
-  sku?: string;
-  imageUrl?: string;
-  product?: ProductBasicInfoDto;
+  discountPrice?: number;
+  product?: {
+    id: string;
+    name: string;
+    price: number;
+  };
   isInStock: boolean;
-  createdAt?: Date;
 
   constructor(partial: Partial<ProductVariantDetailResponseDto>) {
     Object.assign(this, partial);
@@ -57,11 +47,11 @@ export class ProductVariantDetailResponseDto {
 
 export class ProductVariantListResponseDto {
   id: string;
-  size: string;
-  color: string;
+  color?: string;
+  size?: string;
   price: number;
   stock: number;
-  sku?: string;
+  discountPrice?: number;
   isInStock: boolean;
 
   constructor(partial: Partial<ProductVariantListResponseDto>) {

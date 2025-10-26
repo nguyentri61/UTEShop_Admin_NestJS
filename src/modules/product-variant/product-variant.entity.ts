@@ -12,17 +12,32 @@ import {
 } from "typeorm";
 
 @Entity("productVariant")
-@Index(["product"])
+@Index(["productId"])
 export class ProductVariant {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ name: "productId" })
+  @Column()
   productId: string;
 
-  @ManyToOne(() => Product, (p) => p.variants)
+  @ManyToOne(() => Product, (p) => p.variants, { onDelete: "CASCADE" })
   @JoinColumn({ name: "productId" })
   product: Product;
+
+  @Column({ nullable: true })
+  color?: string;
+
+  @Column({ nullable: true })
+  size?: string;
+
+  @Column("int", { default: 0 })
+  stock: number;
+
+  @Column("decimal", { precision: 10, scale: 2 })
+  price: number;
+
+  @Column("decimal", { precision: 10, scale: 2, nullable: true })
+  discountPrice?: number;
 
   @OneToMany(() => OrderItem, (oi) => oi.variant)
   orderItems: OrderItem[];

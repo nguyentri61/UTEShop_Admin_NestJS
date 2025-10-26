@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Put,
   Param,
   Delete,
   Query,
@@ -63,7 +64,7 @@ export class ProductController {
     return this.productService.findOne(id);
   }
 
-  @Patch(":id")
+  @Put(":id")
   update(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,

@@ -26,27 +26,18 @@ export class ProductVariantService {
     });
     if (!product) throw new BadRequestException("Product not found");
 
-    // Cast where object to any to avoid TS strict checking mismatch
     const exist = await this.repo.findOne({
       where: {
         productId: dto.productId,
         size: dto.size,
         color: dto.color,
-      } as any,
+      },
     });
     if (exist)
       throw new BadRequestException("Variant with same attributes exists");
 
-    const v = this.repo.create(dto as any);
-    // normalize save result (can be entity or array)
-    const savedResult = await this.repo.save(v);
-    const saved = Array.isArray(savedResult)
-      ? (savedResult[0] as ProductVariant)
-      : (savedResult as ProductVariant);
-
-    if (!saved || !saved.id) {
-      throw new BadRequestException("Variant not saved correctly");
-    }
+    const variant = this.repo.create(dto);
+    const saved = await this.repo.save(variant);
 
     const full = await this.repo.findOne({
       where: { id: saved.id },
@@ -59,7 +50,7 @@ export class ProductVariantService {
       );
     }
 
-    return this.toResponse(full as ProductVariant);
+    return this.toResponse(full);
   }
 
   async findAll() {
@@ -71,96 +62,93 @@ export class ProductVariantService {
 
   async findByProduct(productId: string) {
     const items = await this.repo.find({
-      where: { productId } as any,
+      where: { productId },
       relations: ["product"],
-      order: { size: "ASC", color: "ASC" } as any,
+      order: { size: "ASC", color: "ASC" },
     });
     return items.map((i) => this.toListResponse(i));
   }
 
   async findOne(id: string) {
-    const v = await this.repo.findOne({
-      where: { id } as any,
+    const variant = await this.repo.findOne({
+      where: { id },
       relations: ["product"],
     });
-    if (!v) throw new NotFoundException(`Variant ${id} not found`);
-    return this.toResponse(v as any);
+    if (!variant) throw new NotFoundException(`Variant ${id} not found`);
+    return this.toResponse(variant);
   }
 
   async findByAttributes(productId: string, size: string, color: string) {
-    const v = await this.repo.findOne({
-      where: { productId, size, color } as any,
+    const variant = await this.repo.findOne({
+      where: { productId, size, color },
       relations: ["product"],
     });
-    if (!v)
+    if (!variant)
       throw new NotFoundException(
         "Variant not found with specified attributes",
       );
-    return this.toResponse(v as any);
+    return this.toResponse(variant);
   }
 
   async update(id: string, dto: UpdateProductVariantDto) {
-    const v = await this.repo.findOne({ where: { id } as any });
-    if (!v) throw new NotFoundException(`Variant ${id} not found`);
-
-    const variant = v as any;
+    const variant = await this.repo.findOne({ where: { id } });
+    if (!variant) throw new NotFoundException(`Variant ${id} not found`);
 
     if (dto.size || dto.color) {
       const size = dto.size ?? variant.size;
       const color = dto.color ?? variant.color;
       const dup = await this.repo.findOne({
-        where: { productId: variant.productId, size, color } as any,
+        where: { productId: variant.productId, size, color },
       });
-      if (dup && (dup as any).id !== id)
+      if (dup && dup.id !== id)
         throw new BadRequestException("Duplicate variant");
     }
+
     Object.assign(variant, dto);
     await this.repo.save(variant);
     return this.findOne(id);
   }
 
   async remove(id: string) {
-    const v = await this.repo.findOne({ where: { id } as any });
-    if (!v) throw new NotFoundException(`Variant ${id} not found`);
-    await this.repo.remove(v as any);
+    const variant = await this.repo.findOne({ where: { id } });
+    if (!variant) throw new NotFoundException(`Variant ${id} not found`);
+    await this.repo.remove(variant);
   }
 
   async updateStock(id: string, quantity: number) {
-    const v = await this.repo.findOne({ where: { id } as any });
-    if (!v) throw new NotFoundException(`Variant ${id} not found`);
+    const variant = await this.repo.findOne({ where: { id } });
+    if (!variant) throw new NotFoundException(`Variant ${id} not found`);
 
-    const variant = v as any;
-    if ((variant.stock ?? 0) + quantity < 0)
+    if (variant.stock + quantity < 0)
       throw new BadRequestException("Insufficient stock");
-    variant.stock = Number(variant.stock ?? 0) + Number(quantity);
+
+    variant.stock += quantity;
     await this.repo.save(variant);
     return this.findOne(id);
   }
 
   async checkStock(id: string, quantity: number) {
-    const v = await this.repo.findOne({ where: { id } as any });
-    if (!v) throw new NotFoundException(`Variant ${id} not found`);
-    const variant = v as any;
+    const variant = await this.repo.findOne({ where: { id } });
+    if (!variant) throw new NotFoundException(`Variant ${id} not found`);
     return {
-      available: (variant.stock ?? 0) >= quantity,
-      stock: Number(variant.stock ?? 0),
+      available: variant.stock >= quantity,
+      stock: variant.stock,
     };
   }
 
   async getAvailableSizes(productId: string) {
     const rows = await this.repo.find({
       where: { productId },
-      select: ["size"] as any,
+      select: ["size"],
     });
-    // rows may be typed as ProductVariant[] by TypeORM typings; assert any to access selected fields safely
-    return [...new Set((rows as any[]).map((r) => (r as any).size))].sort();
+    return [...new Set(rows.map((r) => r.size))].sort();
   }
 
   async getAvailableColors(productId: string, size?: string) {
     const where: any = { productId };
     if (size) where.size = size;
-    const rows = await this.repo.find({ where, select: ["color"] as any });
-    return [...new Set((rows as any[]).map((r) => (r as any).color))].sort();
+    const rows = await this.repo.find({ where, select: ["color"] });
+    return [...new Set(rows.map((r) => r.color))].sort();
   }
 
   async getAvailableOptions(productId: string) {
@@ -171,36 +159,37 @@ export class ProductVariantService {
     return { sizes, colors };
   }
 
-  // thêm helper chuyển đổi giống CategoryService.toResponse
-  private toResponse(variant: any): ProductVariantDetailResponseDto {
+  private toResponse(variant: ProductVariant): ProductVariantDetailResponseDto {
     return new ProductVariantDetailResponseDto({
       id: variant.id,
-      size: variant.size,
+      productId: variant.productId,
       color: variant.color,
-      price: Number(variant.price),
-      stock: Number(variant.stock ?? 0),
-      sku: variant.sku,
-      imageUrl: variant.imageUrl,
+      size: variant.size,
+      price: variant.price,
+      stock: variant.stock,
+      discountPrice: variant.discountPrice,
       product: variant.product
         ? {
             id: variant.product.id,
             name: variant.product.name,
-            price: Number(variant.product.price),
+            price: variant.product.price,
           }
         : undefined,
-      isInStock: Number(variant.stock ?? 0) > 0,
+      isInStock: variant.stock > 0,
     });
   }
 
-  private toListResponse(variant: any): ProductVariantListResponseDto {
+  private toListResponse(
+    variant: ProductVariant,
+  ): ProductVariantListResponseDto {
     return new ProductVariantListResponseDto({
       id: variant.id,
-      size: variant.size,
       color: variant.color,
-      price: Number(variant.price),
-      stock: Number(variant.stock ?? 0),
-      sku: variant.sku,
-      isInStock: Number(variant.stock ?? 0) > 0,
+      size: variant.size,
+      price: variant.price,
+      stock: variant.stock,
+      discountPrice: variant.discountPrice,
+      isInStock: variant.stock > 0,
     });
   }
 }

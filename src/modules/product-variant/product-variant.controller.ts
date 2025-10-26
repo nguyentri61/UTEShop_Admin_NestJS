@@ -3,7 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Delete,
   Query,
@@ -78,7 +78,7 @@ export class ProductVariantController {
     return ApiResponse.success(res);
   }
 
-  @Patch(":id")
+  @Put(":id")
   async update(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: UpdateProductVariantDto,
@@ -94,7 +94,7 @@ export class ProductVariantController {
     return ApiResponse.successMessage("Variant deleted", null);
   }
 
-  @Patch(":id/stock")
+  @Put(":id/stock")
   async updateStock(
     @Param("id", ParseUUIDPipe) id: string,
     @Body("quantity") quantity: number,

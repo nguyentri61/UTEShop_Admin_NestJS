@@ -1,51 +1,47 @@
 import {
   Controller,
   Get,
-  Patch,
-  Put,
   Param,
+  Put,
+  Delete,
+  ParseUUIDPipe,
   Body,
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
-import { UpdateOrderDto } from "./dto/update-order.dto";
-import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
+import { UpdateOrderStatusDto } from "./dto/order-dto";
 import { ApiResponse } from "src/common/response/api-response";
-import { Order } from "./order.entity";
 
 @Controller("orders")
 export class OrderController {
-  constructor(private readonly service: OrderService) {}
+  constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  async getAll(): Promise<ApiResponse<Order[]>> {
-    const items = await this.service.findAll();
-    return ApiResponse.success(items);
+  async findAll() {
+    const result = await this.orderService.findAll();
+    return ApiResponse.success(result);
   }
 
   @Get(":id")
-  async getOne(@Param("id") id: string): Promise<ApiResponse<Order>> {
-    const item = await this.service.findOne(id);
-    return ApiResponse.success(item);
+  async findOne(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.orderService.findOne(id);
+    return ApiResponse.success(result);
   }
 
-  @Put(":id")
-  async update(
-    @Param("id") id: string,
-    @Body() dto: UpdateOrderDto,
-  ): Promise<ApiResponse<Order>> {
-    const updated = await this.service.update(id, dto);
-    return ApiResponse.success(updated);
-  }
-
-  @Patch(":id/status")
-  @HttpCode(HttpStatus.OK)
+  @Put(":id/status")
   async updateStatus(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: UpdateOrderStatusDto,
-  ): Promise<ApiResponse<Order>> {
-    const updated = await this.service.updateStatus(id, dto.status);
-    return ApiResponse.success(updated);
+  ) {
+    const result = await this.orderService.updateStatus(id, dto);
+    return ApiResponse.successMessage("Order status updated", result);
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param("id", ParseUUIDPipe) id: string) {
+    await this.orderService.remove(id);
+    return ApiResponse.successMessage("Order deleted", null);
   }
 }

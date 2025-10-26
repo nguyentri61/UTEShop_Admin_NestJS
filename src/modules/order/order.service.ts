@@ -1,38 +1,69 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Order, OrderStatus } from "./order.entity";
-import { UpdateOrderDto } from "./dto/update-order.dto";
+import { Order } from "./order.entity";
+import { UpdateOrderStatusDto, OrderResponseDto } from "./dto/order-dto";
 
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectRepository(Order)
-    private readonly repo: Repository<Order>,
+    @InjectRepository(Order) private orderRepository: Repository<Order>,
   ) {}
 
-  async findAll(): Promise<Order[]> {
-    return this.repo.find({ relations: ["user", "items"] }); // adjust relations to your model
-  }
-
-  async findOne(id: string): Promise<Order> {
-    const order = await this.repo.findOne({
-      where: { id },
-      relations: ["user", "items"],
+  async findAll(): Promise<OrderResponseDto[]> {
+    const orders = await this.orderRepository.find({
+      relations: ["items", "coupons", "user"],
     });
-    if (!order) throw new NotFoundException("Order not found");
-    return order;
+    return orders.map((order) => this.toResponse(order));
   }
 
-  async update(id: string, dto: UpdateOrderDto): Promise<Order> {
-    const order = await this.findOne(id);
-    Object.assign(order, dto);
-    return this.repo.save(order);
+  async findOne(id: string): Promise<OrderResponseDto> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ["items", "coupons", "user"],
+    });
+    if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
+    return this.toResponse(order);
   }
 
-  async updateStatus(id: string, status: OrderStatus): Promise<Order> {
-    const order = await this.findOne(id);
-    order.status = status;
-    return this.repo.save(order);
+  async updateStatus(
+    id: string,
+    dto: UpdateOrderStatusDto,
+  ): Promise<OrderResponseDto> {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
+
+    order.status = dto.status;
+    await this.orderRepository.save(order);
+    return this.toResponse(order);
+  }
+
+  async remove(id: string): Promise<void> {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
+    await this.orderRepository.remove(order);
+  }
+
+  private toResponse(order: Order): OrderResponseDto {
+    return new OrderResponseDto({
+      id: order.id,
+      address: order.address,
+      phone: order.phone,
+      createdAt: order.createdAt,
+      total: order.total,
+      status: order.status,
+      userId: order.userId,
+      items: order.items?.map((item) => ({
+        id: item.id,
+        variantId: item.variantId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      coupons: order.coupons?.map((coupon) => ({
+        id: coupon.id,
+        code: coupon.code,
+        discount: coupon.discount,
+      })),
+    });
   }
 }
